@@ -50,3 +50,18 @@ update.log
 
 # IntelliJ files
 .idea
+
+# Android port — native build artifacts and compiled libraries
+/thirdparty/*
+!thirdparty/*.sh
+OpenRA.Android/jniLibs/
+*.apk
+*.aab
+*.aar
+*-Signed.apk
+*-aligned.apk
+
+# .NET Android build output
+OpenRA.Android/bin/
+OpenRA.Platforms.Android/bin/
+

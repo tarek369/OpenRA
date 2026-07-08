@@ -37,7 +37,17 @@ namespace OpenRA
 			// Assemblies must exist in the game binary directory next to the main game executable.
 			var assemblyList = new List<Assembly>() { typeof(Game).Assembly };
 			foreach (var filename in manifest.Assemblies)
-				LoadAssembly(assemblyList, Path.Combine(Platform.BinDir, filename));
+			{
+				if (OperatingSystem.IsAndroid())
+				{
+					// On Android the mod assemblies are compiled directly into the app (project
+					// references of OpenRA.Android) and live in the default load context, so we
+					// resolve them by name rather than loading them from disk.
+					LoadCompiledInAssembly(assemblyList, filename);
+				}
+				else
+					LoadAssembly(assemblyList, Path.Combine(Platform.BinDir, filename));
+			}
 
 			AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
 			assemblies = assemblyList.SelectMany(asm => asm.GetNamespaces().Select(ns => (asm, ns))).ToArray();
@@ -61,6 +71,27 @@ namespace OpenRA
 			}
 
 			assemblyList.Add(assembly);
+		}
+
+		static void LoadCompiledInAssembly(List<Assembly> assemblyList, string filename)
+		{
+			// Match the manifest entry (e.g. "OpenRA.Mods.Common.dll") to an already-loaded
+			// assembly in the default load context. Mod DLLs are project references of OpenRA.Android.
+			var assemblyName = Path.GetFileNameWithoutExtension(filename);
+
+			// Assemblies in .NET Android are loaded lazily; trigger a load by name first.
+			Assembly assembly = null;
+			try { assembly = Assembly.Load(new AssemblyName(assemblyName)); }
+			catch { }
+
+			// Fall back to scanning already-loaded assemblies.
+			assembly ??= AppDomain.CurrentDomain.GetAssemblies()
+				.FirstOrDefault(a => a.GetName().Name == assemblyName);
+
+			Console.WriteLine($"[Android] LoadCompiledInAssembly '{filename}' -> {(assembly != null ? assembly.GetName().FullName : "NOT FOUND")}");
+
+			if (assembly != null && !assemblyList.Contains(assembly))
+				assemblyList.Add(assembly);
 		}
 
 		Assembly ResolveAssembly(object sender, ResolveEventArgs e)

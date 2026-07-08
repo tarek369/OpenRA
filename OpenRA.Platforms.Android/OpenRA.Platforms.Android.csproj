@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0-android</TargetFramework>
+		<SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+		<RootNamespace>OpenRA.Platforms.Android</RootNamespace>
+		<Nullable>disable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<OutputType>Library</OutputType>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<!-- The platform DLL is loaded by name (Game.CreatePlatform builds "OpenRA.Platforms.<name>").
+		     On Android we instantiate the platform directly, so this just needs to compile cleanly. -->
+		<IsPublishable>false</IsPublishable>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\OpenRA.Game\OpenRA.Game.csproj" />
+		<PackageReference Include="OpenRA-OpenAL-CS" Version="1.0.22" />
+	</ItemGroup>
+</Project>

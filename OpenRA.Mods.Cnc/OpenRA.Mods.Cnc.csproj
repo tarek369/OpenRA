@@ -1,4 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup Condition="'$(BuildForAndroid)' == 'true'">
+		<TargetFramework></TargetFramework>
+		<TargetFrameworks>net9.0-android</TargetFrameworks>
+	</PropertyGroup>
+
 	<PropertyGroup>
 		<IsPublishable Condition="'$(CopyCncDll)' == 'False'">false</IsPublishable>
 	</PropertyGroup>

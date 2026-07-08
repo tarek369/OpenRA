@@ -1,4 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<!-- When building for Android (triggered by the OpenRA.Android app project), switch
+	     this library to the android TFM. Desktop builds keep the net8.0 default from
+	     Directory.Build.props, so they are unaffected. -->
+	<PropertyGroup Condition="'$(BuildForAndroid)' == 'true'">
+		<TargetFramework></TargetFramework>
+		<TargetFrameworks>net9.0-android</TargetFrameworks>
+	</PropertyGroup>
+
 	<PropertyGroup>
 		<RootNamespace>OpenRA</RootNamespace>
 	</PropertyGroup>

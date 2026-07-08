@@ -77,6 +77,11 @@ namespace OpenRA
 		void SetRelativeMouseMode(bool mode);
 		void SetScaleModifier(float scale);
 
+		/// <summary>Request the OS to show a text-input method (e.g. soft keyboard on touch devices).</summary>
+		void StartTextInput();
+		/// <summary>Request the OS to hide the text-input method.</summary>
+		void StopTextInput();
+
 		GLProfile GLProfile { get; }
 
 		GLProfile[] SupportedGLProfiles { get; }

@@ -615,5 +615,10 @@ namespace OpenRA.Platforms.Default
 			scaleModifier = scale;
 			OnWindowScaleChanged(windowScale, windowScale * oldScaleModifier, windowScale, windowScale * scaleModifier);
 		}
+
+		// SDL2 desktop builds use SDL_StartTextInput/SDL_StopTextInput for IME, but the engine
+		// never calls these today. These are no-ops on desktop; Android overrides them.
+		public void StartTextInput() { }
+		public void StopTextInput() { }
 	}
 }

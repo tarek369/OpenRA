@@ -1,4 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup Condition="'$(BuildForAndroid)' == 'true'">
+		<TargetFramework></TargetFramework>
+		<TargetFrameworks>net9.0-android</TargetFrameworks>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\OpenRA.Game\OpenRA.Game.csproj">
 			<Private>False</Private>

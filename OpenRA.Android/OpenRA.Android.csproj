@@ -1,0 +1,60 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0-android</TargetFramework>
+		<SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+		<OutputType>Exe</OutputType>
+		<RootNamespace>OpenRA.Android</RootNamespace>
+		<Nullable>disable</Nullable>
+		<ApplicationId>net.openra.android</ApplicationId>
+		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<AndroidPackageFormats>apk</AndroidPackageFormats>
+		<AndroidUseIntermediateDesignerFile>false</AndroidUseIntermediateDesignerFile>
+		<!-- Phase 0: produce a debug APK quickly. MonoAOT can be enabled later for perf. -->
+		<RunAOTCompilation>false</RunAOTCompilation>
+		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\OpenRA.Platforms.Android\OpenRA.Platforms.Android.csproj" SetPlatform="Platform=AnyCPU" />
+		<ProjectReference Include="..\OpenRA.Mods.Common\OpenRA.Mods.Common.csproj" />
+		<ProjectReference Include="..\OpenRA.Mods.Cnc\OpenRA.Mods.Cnc.csproj" />
+		<ProjectReference Include="..\OpenRA.Mods.D2k\OpenRA.Mods.D2k.csproj" />
+	</ItemGroup>
+
+	<!-- Engine assets shipped inside the APK. The Activity extracts these to internal storage on
+	     first launch and points Platform.EngineDir there. -->
+	<ItemGroup>
+		<AndroidAsset Include="..\glsl\**\*.vert" Link="assets\glsl\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\glsl\**\*.frag" Link="assets\glsl\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\VERSION" Link="assets\VERSION" />
+		<!-- The global mix database is needed to resolve filenames inside C&C .mix archives. -->
+		<AndroidAsset Include="..\global mix database.dat" Link="assets\global mix database.dat" />
+		<!-- Only the yaml/script asset trees of the built-in mods + shared 'common' mod.
+		     Game asset packages (mix files) are NOT bundled; the menu + asset-installer screen work
+		     without them, and users add real game content via scoped storage later.
+		     Built-in system maps ARE bundled — the shellmap (main-menu background) requires at least
+		     one valid map, and the quickinstall download doesn't include maps. -->
+		<AndroidAsset Include="..\mods\common\**\*.*" Link="assets\mods\common\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\ra\**\*.*" Link="assets\mods\ra\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\cnc\**\*.*" Link="assets\mods\cnc\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\d2k\**\*.*" Link="assets\mods\d2k\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\ts\**\*.*" Link="assets\mods\ts\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\all\**\*.*" Link="assets\mods\all\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\modcontent\**\*.*" Link="assets\mods\modcontent\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\common-content\**\*.*" Link="assets\mods\common-content\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\ra-content\**\*.*" Link="assets\mods\ra-content\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\cnc-content\**\*.*" Link="assets\mods\cnc-content\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\d2k-content\**\*.*" Link="assets\mods\d2k-content\%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidAsset Include="..\mods\ts-content\**\*.*" Link="assets\mods\ts-content\%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<!-- Native libraries built from source with the NDK (thirdparty/build-*-android.sh). These must
+	     live in the app project: AndroidNativeLibrary only propagates from an application project,
+	     not from a referenced library. -->
+	<ItemGroup>
+		<AndroidNativeLibrary Include="jniLibs\arm64-v8a\libfreetype6.so" />
+		<AndroidNativeLibrary Include="jniLibs\arm64-v8a\liblua51.so" />
+		<AndroidNativeLibrary Include="jniLibs\arm64-v8a\libsoft_oal.so" />
+	</ItemGroup>
+</Project>

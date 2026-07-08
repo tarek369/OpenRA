@@ -250,7 +250,9 @@ namespace OpenRA
 			// - We can remove any fragmentation in the LOH caused by temporary loading garbage.
 			// - A loading screen is visible, so a delay won't matter to the user.
 			//   Much better to clean up now then to drop frames during gameplay for GC pauses.
-			GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+			// LOH compaction is not supported on Mono/Android — skip it there and just collect.
+			if (!OperatingSystem.IsAndroid())
+				GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
 			GC.Collect();
 
 			// PostLoadComplete is designed for anything that should trigger at the very end of loading.
@@ -429,7 +431,11 @@ namespace OpenRA
 			foreach (var mod in ExternalMods)
 				Console.WriteLine($"\t{mod.Key} ({mod.Value.Version})");
 
-			var platforms = new[] { Settings.Game.Platform, "Default", null };
+			// Android has its own compiled-in platform (OpenRA.Platforms.Android) and no on-disk
+			// platform DLL, so we skip the settings/configured defaults and target it directly.
+			var platforms = OperatingSystem.IsAndroid()
+				? new[] { "Android", null }
+				: new[] { Settings.Game.Platform, "Default", null };
 			foreach (var p in platforms)
 			{
 				if (p == null)
@@ -460,15 +466,30 @@ namespace OpenRA
 
 		public static IPlatform CreatePlatform(string platformName)
 		{
+			// On Android the platform assembly (OpenRA.Platforms.Android) is a compiled-in project
+			// reference, so we resolve the IPlatform implementation from the default load context
+			// instead of loading the DLL from disk.
+			if (OperatingSystem.IsAndroid())
+			{
+				var platformType = AppDomain.CurrentDomain.GetAssemblies()
+					.Select(a => a.GetType($"OpenRA.Platforms.{platformName}.{platformName}Platform"))
+					.FirstOrDefault(t => t != null && typeof(IPlatform).IsAssignableFrom(t));
+
+				if (platformType == null)
+					throw new InvalidOperationException($"Platform dll must include exactly one IPlatform implementation: OpenRA.Platforms.{platformName}.{platformName}Platform not found.");
+
+				return (IPlatform)platformType.GetConstructor(Type.EmptyTypes).Invoke(null);
+			}
+
 			var rendererPath = Path.Combine(Platform.BinDir, "OpenRA.Platforms." + platformName + ".dll");
 
 			var loader = new AssemblyLoader(rendererPath);
-			var platformType = loader.LoadDefaultAssembly().GetTypes().SingleOrDefault(t => typeof(IPlatform).IsAssignableFrom(t));
+			var platformTypeDesktop = loader.LoadDefaultAssembly().GetTypes().SingleOrDefault(t => typeof(IPlatform).IsAssignableFrom(t));
 
-			if (platformType == null)
+			if (platformTypeDesktop == null)
 				throw new InvalidOperationException("Platform dll must include exactly one IPlatform implementation.");
 
-			return (IPlatform)platformType.GetConstructor(Type.EmptyTypes).Invoke(null);
+			return (IPlatform)platformTypeDesktop.GetConstructor(Type.EmptyTypes).Invoke(null);
 		}
 
 		public static void InitializeMod(Manifest manifest, Arguments args)
@@ -506,12 +527,16 @@ namespace OpenRA
 			if (!ModData.LoadScreen.BeforeLoad(ModData))
 				return;
 
+			Console.WriteLine("InitializeLoaders...");
 			ModData.InitializeLoaders(ModData.DefaultFileSystem);
+			Console.WriteLine("InitializeFonts...");
 			Renderer.InitializeFonts(ModData);
 
+			Console.WriteLine("LoadMaps...");
 			using (new PerfTimer("LoadMaps"))
 				ModData.MapCache.LoadMaps(ModData);
 
+			Console.WriteLine("CursorManager...");
 			Cursor?.Dispose();
 			Cursor = new CursorManager(ModData);
 
