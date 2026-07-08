@@ -1,5 +1,7 @@
 # OpenRA on Android
 
+![OpenRA main menu running natively on Android](screenshots/openra-android-mainmenu.png)
+
 Native Android port of OpenRA, built with .NET 9 (`net9.0-android`) and raw EGL/GLES — no SDL2, no emulation layer.
 
 ## Status
