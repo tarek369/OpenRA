@@ -1,0 +1,39 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix-mali-crash]
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v7
+        with:
+          ref: fix-mali-crash
+
+      - name: Install .NET 9.0
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install Android Workload
+        run: dotnet workload install android
+
+      - name: Build APK
+        run: |
+          cd OpenRA.Android
+          dotnet publish -f net9.0-android -c Release \
+            -p:AndroidPackageFormats=apk \
+            -p:ApplicationVersion=1 \
+            -p:ApplicationDisplayVersion=1.0-fixed
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenRA-Android-arm64
+          path: OpenRA.Android/bin/Release/net9.0-android/*.apk
