@@ -24,16 +24,33 @@ jobs:
       - name: Install Android Workload
         run: dotnet workload install android
 
+      - name: Download and extract native libraries from release APK
+        run: |
+          mkdir -p OpenRA.Android/jniLibs/arm64-v8a
+          wget -q "https://github.com/tarek369/OpenRA/releases/download/v1.0-android/OpenRA-Android-arm64.apk" -O /tmp/release.apk
+          unzip -o /tmp/release.apk \
+            "lib/arm64-v8a/libfreetype6.so" \
+            "lib/arm64-v8a/liblua51.so" \
+            "lib/arm64-v8a/libsoft_oal.so" \
+            -d /tmp/nativelibs
+          mv /tmp/nativelibs/lib/arm64-v8a/*.so OpenRA.Android/jniLibs/arm64-v8a/
+          ls -la OpenRA.Android/jniLibs/arm64-v8a/
+
       - name: Build APK
         run: |
-          cd OpenRA.Android
-          dotnet publish -f net9.0-android -c Release \
+          dotnet publish OpenRA.Android/OpenRA.Android.csproj \
+            -f net9.0-android -c Release \
             -p:AndroidPackageFormats=apk \
             -p:ApplicationVersion=1 \
-            -p:ApplicationDisplayVersion=1.0-fixed
+            -p:ApplicationDisplayVersion=1.0-fixed \
+            --no-self-contained
+
+      - name: Find APK
+        run: |
+          find . -name "*.apk" -type f
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: OpenRA-Android-arm64
-          path: OpenRA.Android/bin/Release/net9.0-android/*.apk
+          name: OpenRA-Android-arm64-fixed
+          path: "**/*.apk"
