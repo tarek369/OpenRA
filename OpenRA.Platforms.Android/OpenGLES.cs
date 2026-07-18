@@ -797,6 +797,16 @@ namespace OpenRA.Platforms.Android
 			switch (severity)
 			{
 				case GL_DEBUG_SEVERITY_HIGH:
+					if (type == GL_DEBUG_TYPE_PERFORMANCE || type == GL_DEBUG_TYPE_PORTABILITY ||
+						type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR || type == GL_DEBUG_TYPE_OTHER ||
+						type == GL_DEBUG_TYPE_MARKER || type == GL_DEBUG_TYPE_PUSH_GROUP ||
+						type == GL_DEBUG_TYPE_POP_GROUP)
+					{
+						error = BuildErrorText(source, type, severity, message);
+						Console.WriteLine(error);
+						break;
+					}
+
 					error = BuildErrorText(source, type, severity, message);
 					WriteGraphicsLog(error);
 					throw new InvalidOperationException("OpenGL Error: See graphics.log for details.");
@@ -804,6 +814,14 @@ namespace OpenRA.Platforms.Android
 				case GL_DEBUG_SEVERITY_MEDIUM:
 					error = BuildErrorText(source, type, severity, message);
 					Console.WriteLine(error);
+					break;
+
+				case GL_DEBUG_SEVERITY_LOW:
+					error = BuildErrorText(source, type, severity, message);
+					Console.WriteLine(error);
+					break;
+
+				case GL_DEBUG_SEVERITY_NOTIFICATION:
 					break;
 			}
 		}
